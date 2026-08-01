@@ -12,26 +12,41 @@ import io
 
 import numpy as np
 import scipy.io.wavfile as wavfile
+import scipy.signal
 
 TARGET_SAMPLE_RATE = 44100
 _PEAK_BUCKETS = 800
 
 
 def decode_audio(data: bytes, sample_rate: int = TARGET_SAMPLE_RATE) -> tuple[np.ndarray, int]:
-    """Decode arbitrary audio bytes to mono float32 in [-1, 1].
+    """Decode audio bytes to mono float32 in [-1, 1].
 
-    Uses ``librosa`` (which wraps soundfile + audioread) so WAV/MP3/FLAC/OGG/M4A
-    all work. Raises ``ValueError`` on unreadable data.
+    Supports 16/24/32-bit PCM WAV (the format the frontend uploads). Other
+    container formats are rejected with ``ValueError``.
     """
-    import librosa
-
     try:
-        y, sr = librosa.load(io.BytesIO(data), sr=sample_rate, mono=True)
-    except Exception as exc:  # librosa/soundfile raise several error types
-        raise ValueError(f"Could not decode audio: {exc}") from exc
+        sr, arr = wavfile.read(io.BytesIO(data))
+    except Exception as exc:
+        raise ValueError(f"Could not decode audio (16-bit WAV expected): {exc}") from exc
+
+    if arr.ndim > 1:
+        arr = arr.mean(axis=1)  # mix to mono
+
+    if arr.dtype == np.int16:
+        y = arr.astype(np.float32) / 32768.0
+    elif arr.dtype == np.int32:
+        y = arr.astype(np.float32) / 2147483648.0
+    elif np.issubdtype(arr.dtype, np.floating):
+        y = arr.astype(np.float32)
+    else:
+        raise ValueError(f"Unsupported WAV sample format: {arr.dtype}")
+
+    if sr != sample_rate:
+        y = scipy.signal.resample(y, int(round(len(y) * sample_rate / sr)))
+        sr = sample_rate
+
     if len(y) == 0:
         raise ValueError("Audio file is empty")
-    y = np.asarray(y, dtype=np.float32)
     y = np.clip(y, -1.0, 1.0)
     return y, int(sr)
 

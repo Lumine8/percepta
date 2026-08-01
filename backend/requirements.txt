@@ -8,16 +8,11 @@ pydantic>=2.7,<3.0
 pydantic-settings>=2.3
 
 # ---- Numerical / signal processing ----
-# Pinned combo verified on Python 3.12 / Windows (numba 0.59.1 supports py3.12,
-# librosa 0.10.2.post1 supports numpy 1.26).
+# scipy-only: keeps the deploy bundle small enough for serverless hosts
+# (Vercel caps Python functions at 500 MB). The frontend uploads 16-bit WAV,
+# which scipy decodes directly; STFT/pitch-shift use scipy.signal equivalents.
 numpy>=1.26,<1.27
 scipy>=1.13,<1.15
-numba==0.59.1
-llvmlite==0.42.0
-librosa==0.10.2.post1
-soundfile>=0.12
-# Alternative audio decoding for non-wav uploads
-audioread>=3.0
 
 # ---- Computer vision ----
 # headless: no GUI/Qt dependencies, safe on servers

@@ -10,6 +10,7 @@ A floor on the gain prevents musical noise / total dropout in speech pauses.
 from __future__ import annotations
 
 import numpy as np
+import scipy.signal
 
 from app.models.audio import AudioDocument
 from app.models.profile import PerceptionProfile
@@ -33,13 +34,16 @@ class NoiseReductionProcessor(BaseProcessor):
     def process(
         self, input: AudioDocument, profile: PerceptionProfile
     ) -> AudioDocument:
-        import librosa
-
         y = np.asarray(input.samples, dtype=np.float32)
         if len(y) < N_FFT:
             return input
 
-        stft = librosa.stft(y, n_fft=N_FFT, hop_length=HOP_LENGTH)
+        _, _, stft = scipy.signal.stft(
+            y,
+            fs=input.sample_rate,
+            nperseg=N_FFT,
+            noverlap=N_FFT - HOP_LENGTH,
+        )
         magnitude = np.abs(stft)
         phase = np.angle(stft)
 
@@ -52,7 +56,12 @@ class NoiseReductionProcessor(BaseProcessor):
         gain = (magnitude - noise_floor) / (magnitude + 1e-8)
         gain = np.clip(gain, GAIN_FLOOR, 1.0) ** SOFTENING_EXPONENT
 
-        cleaned = librosa.istft(magnitude * gain * np.exp(1j * phase), hop_length=HOP_LENGTH)
+        _, cleaned = scipy.signal.istft(
+            magnitude * gain * np.exp(1j * phase),
+            fs=input.sample_rate,
+            nperseg=N_FFT,
+            noverlap=N_FFT - HOP_LENGTH,
+        )
         cleaned = np.asarray(cleaned, dtype=np.float32)
 
         # Preserve original length exactly.

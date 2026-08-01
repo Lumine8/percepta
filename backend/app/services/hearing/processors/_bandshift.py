@@ -25,14 +25,12 @@ def shift_band_down(
     """Pitch-shift a sub-band ``[low_hz, high_hz]`` downward and mix it back.
 
     The sub-band is extracted with a Butterworth band-pass, transposed by
-    ``semitones`` using a phase-vocoder time-stretch + resample, then added back
+    ``semitones`` using a time-stretch + resample (scipy-only), then added back
     under the original signal with ``mix_gain`` weighting.
 
     Any failure (e.g. degenerate short signal) degrades to a no-op rather than
     raising — the pipeline must never crash a request because of DSP edge cases.
     """
-    import librosa
-
     nyquist = sample_rate / 2.0
     high_hz = min(high_hz, nyquist * 0.95)
     low_hz = max(low_hz, 20.0)
@@ -44,19 +42,18 @@ def shift_band_down(
     )
     band = scipy.signal.sosfilt(sos, samples)
 
-    # Phase vocoder needs a minimum amount of signal to be meaningful.
+    # Pitch shift needs a minimum amount of signal to be meaningful.
     min_frames = int(sample_rate * 0.05)
     if len(band) < min_frames or np.max(np.abs(band)) < 1e-6:
         return samples
 
     try:
-        shifted = librosa.effects.pitch_shift(
-            y=np.asarray(band, dtype=np.float32),
-            sr=sample_rate,
-            n_steps=-abs(semitones),
-            bins_per_octave=12,
-            res_type="kaiser_fast",
-        )
+        # Downward pitch ratio, e.g. 12 semitones => 0.5 (one octave down).
+        factor = 2.0 ** (-abs(semitones) / 12.0)
+        n = len(band)
+        # Stretch in time by 1/factor, then resample back to n — this shifts pitch.
+        stretched = scipy.signal.resample(band, int(round(n / factor)))
+        shifted = scipy.signal.resample(stretched, n)
     except Exception:
         return samples
 
