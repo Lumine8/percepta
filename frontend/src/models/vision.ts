@@ -2,9 +2,15 @@
 
 import type { VisionProfile } from '@/models/profile'
 
+export interface ContrastFrequencyResult {
+  cpd: number
+  threshold_percent: number
+}
+
 export interface ContrastResult {
   threshold_percent: number
   trials_visible: number[]
+  frequencies?: ContrastFrequencyResult[]
 }
 
 export interface ColorPlateResult {
@@ -17,9 +23,19 @@ export interface ColorResult {
   plates: ColorPlateResult[]
 }
 
+export interface EyeAcuityResult {
+  snellen: string
+  logmar: number
+  correct: boolean
+  letters_shown: number
+  letters_correct: number
+}
+
 export interface AcuityResult {
   last_readable_row?: string | null
   correct: boolean
+  left?: EyeAcuityResult | null
+  right?: EyeAcuityResult | null
 }
 
 export interface BlindSpotResult {
@@ -28,11 +44,24 @@ export interface BlindSpotResult {
   viewing_distance_cm: number
 }
 
+export interface AstigmatismResult {
+  axis_blurred: number
+  blur_score: number
+  symmetric: boolean
+}
+
+export interface NearVisionResult {
+  snellen: string
+  correct: boolean
+}
+
 export interface VisionAnalyzeRequest {
   contrast?: ContrastResult | null
   color?: ColorResult | null
   acuity?: AcuityResult | null
   blind_spot?: BlindSpotResult | null
+  astigmatism?: AstigmatismResult | null
+  near_vision?: NearVisionResult | null
   completed_at?: string
 }
 

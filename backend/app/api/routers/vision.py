@@ -53,7 +53,7 @@ def submit_vision_analysis(
     payload: VisionAnalyzeRequest,
     store: ProfileStore = Depends(get_store),
 ) -> VisionProfile:
-    """Interpret and persist the four in-browser vision assessments."""
+    """Interpret and persist the in-browser vision assessments."""
     completed_at = (
         datetime.fromisoformat(payload.completed_at.replace("Z", "+00:00"))
         if payload.completed_at
@@ -62,14 +62,19 @@ def submit_vision_analysis(
 
     contrast = payload.contrast.model_dump() if payload.contrast else None
     color = payload.color.model_dump() if payload.color else None
-    acuity_row = payload.acuity.last_readable_row if payload.acuity else None
+    acuity = payload.acuity.model_dump() if payload.acuity else None
     blind_spot = payload.blind_spot.model_dump() if payload.blind_spot else None
+    astigmatism = payload.astigmatism.model_dump() if payload.astigmatism else None
+    near_vision = payload.near_vision.model_dump() if payload.near_vision else None
 
     vision = score_vision(
         contrast=contrast,
         color_plates=color["plates"] if color else [],
-        acuity_snellen=acuity_row,
+        acuity_snellen=(acuity or {}).get("last_readable_row"),
         blind_spot=blind_spot,
+        acuity=acuity,
+        astigmatism=astigmatism,
+        near_vision=near_vision,
         completed_at=completed_at,
     )
     store.update_vision(vision)

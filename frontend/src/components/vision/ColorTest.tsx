@@ -15,9 +15,24 @@ export const PLATES: PlateDef[] = [
   { id: 'rg_1', expected: 3, kind: 'rg' },
   { id: 'rg_2', expected: 7, kind: 'rg' },
   { id: 'rg_3', expected: 2, kind: 'rg' },
+  { id: 'rg_4', expected: 6, kind: 'rg' },
+  { id: 'rg_5', expected: 9, kind: 'rg' },
+  { id: 'rg_6', expected: 4, kind: 'rg' },
   { id: 'by_1', expected: 5, kind: 'by' },
   { id: 'by_2', expected: 8, kind: 'by' },
+  { id: 'by_3', expected: 2, kind: 'by' },
+  { id: 'by_4', expected: 7, kind: 'by' },
 ]
+
+/** Fisher–Yates shuffle so plate order differs per session. */
+function shuffle<T>(input: T[]): T[] {
+  const arr = [...input]
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[arr[i], arr[j]] = [arr[j], arr[i]]
+  }
+  return arr
+}
 
 const BG_RG = ['#3f7a3a', '#35702f', '#2c6a2c', '#468a40', '#4a6a3a', '#4f6a4f']
 const FG_RG = ['#c0562e', '#b04828', '#a53a22']
@@ -93,11 +108,12 @@ interface ColorTestProps {
 /** Ishihara-style plate battery for color perception screening. */
 export function ColorTest({ onComplete }: ColorTestProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [order] = useState<PlateDef[]>(() => shuffle(PLATES))
   const [index, setIndex] = useState(0)
   const [answers, setAnswers] = useState<ColorPlateResult[]>([])
   const [done, setDone] = useState(false)
 
-  const plate = PLATES[index]
+  const plate = order[index]
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -113,7 +129,7 @@ export function ColorTest({ onComplete }: ColorTestProps) {
         expected: plate.expected,
       }
       const next = [...answers, result]
-      if (index < PLATES.length - 1) {
+      if (index < order.length - 1) {
         setIndex(index + 1)
       } else {
         setDone(true)
@@ -121,7 +137,7 @@ export function ColorTest({ onComplete }: ColorTestProps) {
       }
       setAnswers(next)
     },
-    [answers, index, onComplete, plate],
+    [answers, index, onComplete, plate, order.length],
   )
 
   if (done) {
@@ -139,7 +155,7 @@ export function ColorTest({ onComplete }: ColorTestProps) {
       <div className="mb-4 flex items-center justify-between">
         <h3 className="font-semibold">Color perception</h3>
         <span className="text-sm text-muted-foreground">
-          Plate {index + 1}/{PLATES.length}
+          Plate {index + 1}/{order.length}
         </span>
       </div>
       <canvas

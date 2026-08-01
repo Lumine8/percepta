@@ -15,8 +15,9 @@ interface BlindSpotTestProps {
 }
 
 // Grid geometry (in "visual angle cm" units, where 57 cm distance ≈ 1°/cm).
-const STEP_CM = 8
-const RADIUS_STEPS = 2
+// A denser, wider grid catches the full extent of the blind spot region.
+const STEP_CM = 6
+const RADIUS_STEPS = 3
 const TEMPORAL_BIAS_CM = 16 // blind spot is ~15° temporal from fixation
 
 // Canvas scale: pixels per cm on the 400×400 canvas.

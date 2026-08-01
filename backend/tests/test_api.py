@@ -113,25 +113,68 @@ def test_hearing_process_rejects_bad_profile(client) -> None:
 
 def test_vision_analyze_round_trip(client) -> None:
     payload = {
-        "contrast": {"threshold_percent": 8.0, "trials_visible": [100, 30, 10]},
-        "color": {"plates": [{"id": "rg_1", "reported": 3, "expected": 3}]},
-        "acuity": {"last_readable_row": "20/25", "correct": True},
+        "contrast": {
+            "threshold_percent": 8.0,
+            "trials_visible": [100, 30, 10],
+            "frequencies": [
+                {"cpd": 2.0, "threshold_percent": 5.0},
+                {"cpd": 12.0, "threshold_percent": 20.0},
+            ],
+        },
+        "color": {
+            "plates": [
+                {"id": "rg_1", "reported": 3, "expected": 3},
+                {"id": "rg_2", "reported": 7, "expected": 7},
+                {"id": "rg_3", "reported": 9, "expected": 2},
+            ]
+        },
+        "acuity": {
+            "last_readable_row": "20/25",
+            "correct": True,
+            "left": {
+                "snellen": "20/30",
+                "logmar": 0.18,
+                "correct": True,
+                "letters_shown": 15,
+                "letters_correct": 13,
+            },
+            "right": {
+                "snellen": "20/25",
+                "logmar": 0.1,
+                "correct": True,
+                "letters_shown": 15,
+                "letters_correct": 14,
+            },
+        },
         "blind_spot": {
             "eye": "left",
             "dots_missing": [{"x": 8, "y": 0}, {"x": 12, "y": 0}],
             "viewing_distance_cm": 57,
         },
+        "astigmatism": {
+            "axis_blurred": 30.0,
+            "blur_score": 0.7,
+            "symmetric": False,
+        },
+        "near_vision": {"snellen": "20/25", "correct": True},
     }
     response = client.post("/api/vision/analyze", json=payload)
     assert response.status_code == 200
     body = response.json()
     assert body["contrast_sensitivity"]["threshold_percent"] == 8.0
+    assert len(body["contrast_sensitivity"]["frequencies"]) == 2
+    assert body["contrast_sensitivity"]["frequencies"][1]["cpd"] == 12.0
     assert body["acuity"]["snellen"] == "20/25"
+    assert body["acuity"]["right"]["snellen"] == "20/25"
+    assert body["acuity"]["left"]["snellen"] == "20/30"
     assert body["blind_spot"]["radius_deg"] > 0
+    assert body["astigmatism"]["axis_blurred"] == 30.0
+    assert body["near_vision"]["decimal"] == 0.8
 
     profile = client.get("/api/profile")
     assert profile.status_code == 200
     assert profile.json()["vision"]["acuity"]["snellen"] == "20/25"
+    assert profile.json()["vision"]["near_vision"]["snellen"] == "20/25"
 
 
 def test_vision_enhance_returns_png(client) -> None:

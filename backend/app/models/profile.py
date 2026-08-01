@@ -38,9 +38,18 @@ class HearingProfile(BaseModel):
     completed_at: datetime | None = None
 
 
+class ContrastFrequency(BaseModel):
+    """Threshold measured at a single spatial frequency (cycles per degree)."""
+
+    cpd: float = Field(gt=0)
+    threshold_percent: float
+    score: float = Field(ge=0, le=1)
+
+
 class ContrastSensitivityProfile(BaseModel):
     threshold_percent: float
     score: float = Field(ge=0, le=1)
+    frequencies: list[ContrastFrequency] = Field(default_factory=list)
 
 
 ColorDeficiency = Literal["normal", "protanomaly", "deuteranomaly", "tritanomaly"]
@@ -50,7 +59,35 @@ class ColorPerceptionProfile(BaseModel):
     deficiency: ColorDeficiency = "normal"
 
 
+class EyeAcuity(BaseModel):
+    """Acuity for a single eye."""
+
+    snellen: str
+    logmar: float
+    decimal: float
+
+
 class AcuityProfile(BaseModel):
+    """Acuity headline (best eye) plus optional per-eye detail."""
+
+    snellen: str
+    logmar: float
+    decimal: float
+    left: EyeAcuity | None = None
+    right: EyeAcuity | None = None
+
+
+class AstigmatismProfile(BaseModel):
+    """Self-reported axis of most-blurred radial lines + severity proxy."""
+
+    axis_blurred: float = Field(ge=0, lt=180)
+    blur_score: float = Field(ge=0, le=1)
+    symmetric: bool = False
+
+
+class NearVisionProfile(BaseModel):
+    """Reading-distance acuity (held ~40 cm)."""
+
     snellen: str
     logmar: float
     decimal: float
@@ -72,6 +109,8 @@ class VisionProfile(BaseModel):
     )
     acuity: AcuityProfile | None = None
     blind_spot: BlindSpotProfile | None = None
+    astigmatism: AstigmatismProfile | None = None
+    near_vision: NearVisionProfile | None = None
     completed_at: datetime | None = None
 
 

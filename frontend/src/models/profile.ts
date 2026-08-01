@@ -23,9 +23,16 @@ export interface HearingProfile {
   completed_at?: string | null
 }
 
+export interface ContrastFrequencyProfile {
+  cpd: number
+  threshold_percent: number
+  score: number
+}
+
 export interface ContrastSensitivityProfile {
   threshold_percent: number
   score: number
+  frequencies?: ContrastFrequencyProfile[]
 }
 
 export type ColorDeficiency =
@@ -38,7 +45,27 @@ export interface ColorPerceptionProfile {
   deficiency: ColorDeficiency
 }
 
+export interface EyeAcuityProfile {
+  snellen: string
+  logmar: number
+  decimal: number
+}
+
 export interface AcuityProfile {
+  snellen: string
+  logmar: number
+  decimal: number
+  left?: EyeAcuityProfile | null
+  right?: EyeAcuityProfile | null
+}
+
+export interface AstigmatismProfile {
+  axis_blurred: number
+  blur_score: number
+  symmetric: boolean
+}
+
+export interface NearVisionProfile {
   snellen: string
   logmar: number
   decimal: number
@@ -56,6 +83,8 @@ export interface VisionProfile {
   color_perception: ColorPerceptionProfile
   acuity?: AcuityProfile | null
   blind_spot?: BlindSpotProfile | null
+  astigmatism?: AstigmatismProfile | null
+  near_vision?: NearVisionProfile | null
   completed_at?: string | null
 }
 

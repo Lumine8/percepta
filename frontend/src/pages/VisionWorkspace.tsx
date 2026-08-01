@@ -4,10 +4,12 @@ import { useState } from 'react'
 
 import { analyzeVision } from '@/api/vision'
 import { AcuityTest } from '@/components/vision/AcuityTest'
+import { AstigmatismTest } from '@/components/vision/AstigmatismTest'
 import { BlindSpotTest } from '@/components/vision/BlindSpotTest'
 import { ColorTest } from '@/components/vision/ColorTest'
 import { ContrastTest } from '@/components/vision/ContrastTest'
 import { ImageEnhancer } from '@/components/vision/ImageEnhancer'
+import { NearVisionTest } from '@/components/vision/NearVisionTest'
 import { Badge } from '@/components/shared/ui/badge'
 import { GlassCard } from '@/components/shared/GlassCard'
 import { StepIndicator } from '@/components/shared/StepIndicator'
@@ -15,8 +17,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui
 import { ErrorState } from '@/components/shared/StateComponents'
 import { useProfile } from '@/hooks/useProfile'
 import type {
+  AstigmatismResult,
   BlindSpotResult,
   ColorPlateResult,
+  NearVisionResult,
   VisionAnalyzeRequest,
 } from '@/models/vision'
 import type { VisionProfile } from '@/models/profile'
@@ -27,6 +31,8 @@ const ASSESSMENT_STEPS = [
   { id: 'color', title: 'Color' },
   { id: 'acuity', title: 'Acuity' },
   { id: 'blindspot', title: 'Blind Spot' },
+  { id: 'astigmatism', title: 'Astigmatism' },
+  { id: 'near', title: 'Near Vision' },
   { id: 'results', title: 'Results' },
 ]
 
@@ -115,7 +121,34 @@ export function VisionWorkspace() {
       completedAt: new Date().toISOString(),
       data: blind_spot as unknown as Record<string, unknown>,
     })
-    void finishAssessment({ ...results, blind_spot })
+    setStep('astigmatism')
+  }
+  const onAstigmatism = (astigmatism: AstigmatismResult) => {
+    setResults((r) => ({ ...r, astigmatism }))
+    testResultsService.addResult({
+      module: 'vision',
+      test: 'astigmatism',
+      label: 'Astigmatism fan test',
+      summary:
+        astigmatism.symmetric || astigmatism.blur_score < 0.3
+          ? 'No directional blur'
+          : `Blur near ${astigmatism.axis_blurred}°`,
+      completedAt: new Date().toISOString(),
+      data: astigmatism as unknown as Record<string, unknown>,
+    })
+    setStep('near')
+  }
+  const onNearVision = (near_vision: NearVisionResult) => {
+    setResults((r) => ({ ...r, near_vision }))
+    testResultsService.addResult({
+      module: 'vision',
+      test: 'near',
+      label: 'Near vision test',
+      summary: `${near_vision.snellen} at reading distance`,
+      completedAt: new Date().toISOString(),
+      data: near_vision as unknown as Record<string, unknown>,
+    })
+    void finishAssessment({ ...results, near_vision })
   }
 
   return (
@@ -148,6 +181,8 @@ export function VisionWorkspace() {
               {step === 'color' && <ColorTest onComplete={onColor} />}
               {step === 'acuity' && <AcuityTest onComplete={onAcuity} />}
               {step === 'blindspot' && <BlindSpotTest onComplete={onBlindSpot} />}
+              {step === 'astigmatism' && <AstigmatismTest onComplete={onAstigmatism} />}
+              {step === 'near' && <NearVisionTest onComplete={onNearVision} />}
 
               {analyzing && (
                 <GlassCard className="p-8">
@@ -181,13 +216,31 @@ function ProfileSummary({ profile }: { profile: VisionProfile }) {
     items.push({ label: 'Color perception', value: profile.color_perception.deficiency })
   }
   if (profile.acuity) {
-    items.push({ label: 'Acuity', value: profile.acuity.snellen })
+    const perEye = [profile.acuity.left, profile.acuity.right]
+      .filter((e): e is NonNullable<typeof e> => e != null)
+      .map((e) => `${e.snellen}`)
+    items.push({
+      label: 'Acuity (best eye)',
+      value: perEye.length > 0 ? `${profile.acuity.snellen} · ${perEye.join(' / ')}` : profile.acuity.snellen,
+    })
   }
   if (profile.blind_spot) {
     items.push({
       label: 'Blind spot',
       value: `${profile.blind_spot.radius_deg}° radius`,
     })
+  }
+  if (profile.astigmatism) {
+    items.push({
+      label: 'Astigmatism',
+      value:
+        profile.astigmatism.symmetric || profile.astigmatism.blur_score < 0.3
+          ? 'No directional blur'
+          : `Blur near ${profile.astigmatism.axis_blurred}°`,
+    })
+  }
+  if (profile.near_vision) {
+    items.push({ label: 'Near vision', value: profile.near_vision.snellen })
   }
 
   return (

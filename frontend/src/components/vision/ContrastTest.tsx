@@ -2,20 +2,36 @@ import { useEffect, useRef, useState } from 'react'
 
 import { Button } from '@/components/shared/ui/button'
 import { GlassCard } from '@/components/shared/GlassCard'
+import type { ContrastFrequencyResult, ContrastResult } from '@/models/vision'
 
 const CONTRAST_STEPS = [100, 30, 10, 3, 1]
 
+/** Two spatial frequencies: coarse (low cpd) and fine (high cpd) gratings. */
+const FREQUENCIES = [
+  { cpd: 2, cycles: 4, label: 'Coarse stripes' },
+  { cpd: 12, cycles: 18, label: 'Fine stripes' },
+]
+
 interface ContrastTestProps {
-  onComplete: (result: { threshold_percent: number; trials_visible: number[] }) => void
+  onComplete: (result: ContrastResult) => void
 }
 
-/** Contrast-sensitivity grating detection (Michelson contrast descending). */
+export function thresholdFromTrials(visible: number[], missed: number): number {
+  const last = visible[visible.length - 1] ?? CONTRAST_STEPS[0]
+  return Math.max(1, Math.round(((last + missed) / 2) * 100) / 100)
+}
+
+/** Contrast-sensitivity grating detection across two spatial frequencies. */
 export function ContrastTest({ onComplete }: ContrastTestProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [freqIndex, setFreqIndex] = useState(0)
   const [index, setIndex] = useState(0)
   const [visibleTrials, setVisibleTrials] = useState<number[]>([])
+  const [allVisible, setAllVisible] = useState<number[]>([])
+  const [freqThresholds, setFreqThresholds] = useState<ContrastFrequencyResult[]>([])
   const [phase, setPhase] = useState<'trial' | 'done'>('trial')
 
+  const freq = FREQUENCIES[freqIndex]
   const contrast = CONTRAST_STEPS[index]
 
   useEffect(() => {
@@ -28,37 +44,56 @@ export function ContrastTest({ onComplete }: ContrastTestProps) {
     ctx.fillStyle = '#0b0d1f'
     ctx.fillRect(0, 0, w, h)
 
-    // 4 cycles of a square-ish grating (easier to detect than sine at small sizes).
-    const cycles = 4
+    // Square-ish grating at the current spatial frequency.
+    const cycles = freq.cycles
     for (let x = 0; x < w; x++) {
       const c = contrast / 100
       const band = Math.floor((x / w) * cycles) % 2 === 0
-      const lum = band
-        ? 0.5 + (0.5 * c) / 2
-        : 0.5 - (0.5 * c) / 2
+      const lum = band ? 0.5 + (0.5 * c) / 2 : 0.5 - (0.5 * c) / 2
       ctx.fillStyle = `rgb(${Math.round(lum * 255)}, ${Math.round(lum * 255)}, ${Math.round(lum * 255)})`
       ctx.fillRect(x, 0, 1, h)
     }
-  }, [contrast, phase])
+  }, [contrast, freq, phase])
 
   const respond = (visible: boolean) => {
+    if (phase === 'done') return
     const nextVisible = [...visibleTrials]
+    const combinedAll = [...allVisible]
+    let threshold: number | null = null
+
     if (visible) {
       nextVisible.push(contrast)
+      combinedAll.push(contrast)
       if (index < CONTRAST_STEPS.length - 1) {
         setIndex(index + 1)
-      } else {
-        setPhase('done')
-        onComplete({ threshold_percent: contrast, trials_visible: nextVisible })
+        setVisibleTrials(nextVisible)
+        setAllVisible(combinedAll)
+        return
       }
+      threshold = contrast
     } else {
-      // Threshold is interpolated between last seen and this missed contrast.
-      const last = visibleTrials[visibleTrials.length - 1] ?? CONTRAST_STEPS[0]
-      const threshold = Math.max(1, Math.round(((last + contrast) / 2) * 100) / 100)
-      setPhase('done')
-      onComplete({ threshold_percent: threshold, trials_visible: nextVisible })
+      threshold = thresholdFromTrials(visibleTrials, contrast)
     }
     setVisibleTrials(nextVisible)
+    setAllVisible(combinedAll)
+
+    const nextThresholds = [...freqThresholds, { cpd: freq.cpd, threshold_percent: threshold }]
+    setFreqThresholds(nextThresholds)
+
+    if (freqIndex < FREQUENCIES.length - 1) {
+      setFreqIndex(freqIndex + 1)
+      setIndex(0)
+      setVisibleTrials([])
+      return
+    }
+
+    setPhase('done')
+    const headline = Math.max(...nextThresholds.map((t) => t.threshold_percent))
+    onComplete({
+      threshold_percent: headline,
+      trials_visible: combinedAll,
+      frequencies: nextThresholds,
+    })
   }
 
   if (phase === 'done') {
@@ -73,8 +108,13 @@ export function ContrastTest({ onComplete }: ContrastTestProps) {
 
   return (
     <GlassCard className="p-6">
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="font-semibold">Contrast sensitivity</h3>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h3 className="font-semibold">Contrast sensitivity</h3>
+          <p className="text-sm text-muted-foreground">
+            {freq.label} · 2 of {FREQUENCIES.length} frequencies
+          </p>
+        </div>
         <span className="text-sm text-muted-foreground">
           Contrast {contrast}% · trial {index + 1}/{CONTRAST_STEPS.length}
         </span>
@@ -84,7 +124,7 @@ export function ContrastTest({ onComplete }: ContrastTestProps) {
         width={320}
         height={160}
         className="w-full rounded-lg border border-border"
-        aria-label={`Grating at ${contrast} percent contrast`}
+        aria-label={`${freq.label} grating at ${contrast} percent contrast`}
       />
       <p className="mt-3 text-sm text-muted-foreground">
         Do you see the stripes? (The pattern may be faint.)

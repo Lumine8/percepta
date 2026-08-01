@@ -1,8 +1,8 @@
 """Vision assessment interpretation.
 
-Converts the four raw assessment results (contrast, color, acuity, blind spot) into
-a structured :class:`VisionProfile`. Heuristics are clearly documented — this is a
-screening tool, not an ophthalmic diagnosis.
+Converts the raw assessment results (contrast, color, acuity, blind spot,
+astigmatism, near vision) into a structured :class:`VisionProfile`. Heuristics
+are clearly documented — this is a screening tool, not an ophthalmic diagnosis.
 """
 
 from __future__ import annotations
@@ -12,33 +12,67 @@ from datetime import datetime, timezone
 
 from app.models.profile import (
     AcuityProfile,
+    AstigmatismProfile,
     BlindSpotProfile,
     ColorDeficiency,
     ColorPerceptionProfile,
+    ContrastFrequency,
     ContrastSensitivityProfile,
+    EyeAcuity,
+    NearVisionProfile,
     VisionProfile,
 )
 
 
-def score_contrast(threshold_percent: float) -> ContrastSensitivityProfile:
+def _frequency_score(cpd: float, threshold_percent: float) -> float:
+    """Score a single spatial-frequency threshold onto 0..1.
+
+    Higher spatial frequencies demand lower thresholds to be "normal"; the
+    threshold is normalised by a mild penalty that grows with cpd so a fine
+    grating needs better contrast to score well.
+    """
+    threshold = max(min(threshold_percent, 100.0), 1.0)
+    base = 1.0 - math.log10(threshold) / 2.0
+    penalty = min(cpd / 30.0, 0.25)
+    return max(0.0, min(1.0, base - penalty))
+
+
+def score_contrast(
+    threshold_percent: float, frequencies: list[dict] | None = None
+) -> ContrastSensitivityProfile:
     """Score contrast threshold (1–100%) onto a 0..1 scale.
 
     `score = 1 - log10(threshold) / log10(100)`, clamped. 1% threshold → 1.0,
-    100% → 0.0.
+    100% → 0.0. Optional per-spatial-frequency thresholds are retained as detail.
     """
     threshold = max(min(threshold_percent, 100.0), 1.0)
     score = max(0.0, min(1.0, 1.0 - math.log10(threshold) / 2.0))
+
+    freqs: list[ContrastFrequency] = []
+    for freq in frequencies or []:
+        cpd = max(float(freq.get("cpd", 1.0)), 0.1)
+        th = max(min(float(freq.get("threshold_percent", threshold)), 100.0), 1.0)
+        freqs.append(
+            ContrastFrequency(
+                cpd=round(cpd, 2),
+                threshold_percent=round(th, 2),
+                score=round(_frequency_score(cpd, th), 3),
+            )
+        )
+
     return ContrastSensitivityProfile(
-        threshold_percent=round(threshold, 2), score=round(score, 3)
+        threshold_percent=round(threshold, 2),
+        score=round(score, 3),
+        frequencies=freqs,
     )
 
 
 #: Number of expected-confusion plates per deficiency class a "normal" response
 #: must NOT match in order to flag that deficiency.
 _CONFUSION_PLATES = {
-    "protanomaly": {"rg_1", "rg_2", "rg_3"},
-    "deuteranomaly": {"rg_1", "rg_2", "rg_3"},
-    "tritanomaly": {"by_1", "by_2"},
+    "protanomaly": {"rg_1", "rg_2", "rg_3", "rg_4", "rg_5", "rg_6"},
+    "deuteranomaly": {"rg_1", "rg_2", "rg_3", "rg_4", "rg_5", "rg_6"},
+    "tritanomaly": {"by_1", "by_2", "by_3", "by_4"},
 }
 
 
@@ -87,8 +121,10 @@ _SNELLEN_ROWS = {
 }
 
 
-def score_acuity(snellen: str) -> AcuityProfile | None:
-    """Convert a Snellen row (e.g. ``"20/25"``) to logMAR + decimal acuity."""
+def _eye_profile(snellen: str | None) -> EyeAcuity | None:
+    """Build a per-eye :class:`EyeAcuity` from a Snellen row, or None."""
+    if not snellen:
+        return None
     decimal = _SNELLEN_ROWS.get(snellen)
     if decimal is None:
         try:
@@ -97,8 +133,41 @@ def score_acuity(snellen: str) -> AcuityProfile | None:
         except (ValueError, ZeroDivisionError):
             return None
     decimal = max(min(decimal, 2.0), 0.01)
-    logmar = round(math.log10(1.0 / decimal), 2)
-    return AcuityProfile(snellen=snellen, logmar=logmar, decimal=round(decimal, 2))
+    return EyeAcuity(
+        snellen=snellen,
+        logmar=round(math.log10(1.0 / decimal), 2),
+        decimal=round(decimal, 2),
+    )
+
+
+def score_acuity(
+    snellen: str | None,
+    left: dict | None = None,
+    right: dict | None = None,
+) -> AcuityProfile | None:
+    """Convert Snellen rows (e.g. ``"20/25"``) to logMAR + decimal acuity.
+
+    The headline row is the best (largest decimal) of the provided eyes; per-eye
+    detail is retained when available.
+    """
+    left_profile = _eye_profile(left.get("snellen") if left else None)
+    right_profile = _eye_profile(right.get("snellen") if right else None)
+
+    best = _eye_profile(snellen)
+    if best is None:
+        candidates = [p for p in (left_profile, right_profile) if p is not None]
+        if candidates:
+            best = max(candidates, key=lambda p: p.decimal)
+    if best is None:
+        return None
+
+    return AcuityProfile(
+        snellen=best.snellen,
+        logmar=best.logmar,
+        decimal=best.decimal,
+        left=left_profile,
+        right=right_profile,
+    )
 
 
 def score_blind_spot(
@@ -130,11 +199,42 @@ def score_blind_spot(
     )
 
 
+def score_astigmatism(
+    axis_blurred: float, blur_score: float = 0.0, symmetric: bool = False
+) -> AstigmatismProfile:
+    """Store the self-reported blur axis and severity proxy.
+
+    ``blur_score`` is the user's perceived severity (0 = none, 1 = max). The axis
+    is only meaningful when blur is directional (``symmetric`` False).
+    """
+    axis = (float(axis_blurred) % 180.0 + 180.0) % 180.0
+    return AstigmatismProfile(
+        axis_blurred=round(axis, 1),
+        blur_score=round(max(0.0, min(float(blur_score), 1.0)), 3),
+        symmetric=bool(symmetric),
+    )
+
+
+def score_near_vision(snellen: str) -> NearVisionProfile | None:
+    """Convert a reading-distance Snellen row to logMAR + decimal acuity."""
+    profile = _eye_profile(snellen)
+    if profile is None:
+        return None
+    return NearVisionProfile(
+        snellen=profile.snellen,
+        logmar=profile.logmar,
+        decimal=profile.decimal,
+    )
+
+
 def score_vision(
     contrast: dict | None,
     color_plates: list[dict],
     acuity_snellen: str | None,
     blind_spot: dict | None,
+    acuity: dict | None = None,
+    astigmatism: dict | None = None,
+    near_vision: dict | None = None,
     completed_at: datetime | None = None,
 ) -> VisionProfile:
     """Assemble a complete :class:`VisionProfile` from raw assessment data."""
@@ -142,13 +242,18 @@ def score_vision(
 
     if contrast and contrast.get("threshold_percent") is not None:
         vision.contrast_sensitivity = score_contrast(
-            float(contrast["threshold_percent"])
+            float(contrast["threshold_percent"]),
+            frequencies=contrast.get("frequencies"),
         )
 
     vision.color_perception = score_color(color_plates or [])
 
-    if acuity_snellen:
-        vision.acuity = score_acuity(acuity_snellen)
+    acuity_row = acuity_snellen or (acuity or {}).get("last_readable_row")
+    vision.acuity = score_acuity(
+        acuity_row,
+        left=(acuity or {}).get("left"),
+        right=(acuity or {}).get("right"),
+    )
 
     if blind_spot:
         vision.blind_spot = score_blind_spot(
@@ -156,5 +261,15 @@ def score_vision(
             blind_spot.get("dots_missing", []),
             blind_spot.get("viewing_distance_cm", 57.0),
         )
+
+    if astigmatism:
+        vision.astigmatism = score_astigmatism(
+            astigmatism.get("axis_blurred", 0.0),
+            astigmatism.get("blur_score", 0.0),
+            astigmatism.get("symmetric", False),
+        )
+
+    if near_vision and near_vision.get("snellen"):
+        vision.near_vision = score_near_vision(str(near_vision["snellen"]))
 
     return vision
