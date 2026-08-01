@@ -1,0 +1,34 @@
+# ---- Web framework ----
+fastapi>=0.115,<1.0
+uvicorn[standard]>=0.30
+python-multipart>=0.0.9
+
+# ---- Validation / settings ----
+pydantic>=2.7,<3.0
+pydantic-settings>=2.3
+
+# ---- Numerical / signal processing ----
+# Pinned combo verified on Python 3.12 / Windows (numba 0.59.1 supports py3.12,
+# librosa 0.10.2.post1 supports numpy 1.26).
+numpy>=1.26,<1.27
+scipy>=1.13,<1.15
+numba==0.59.1
+llvmlite==0.42.0
+librosa==0.10.2.post1
+soundfile>=0.12
+# Alternative audio decoding for non-wav uploads
+audioread>=3.0
+
+# ---- Computer vision ----
+# headless: no GUI/Qt dependencies, safe on servers
+opencv-python-headless>=4.9,<4.11
+pillow>=10
+
+# ---- AI (optional: Gemini-backed processors) ----
+# Enable with PERCEPTA_USE_AI_PROCESSORS=true + PERCEPTA_GEMINI_API_KEY.
+# The pipeline degrades to rule-based stages automatically if either is missing.
+google-genai>=2.0
+
+# ---- Tests ----
+pytest>=8
+httpx>=0.27

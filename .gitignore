@@ -1,0 +1,42 @@
+# ---- Node / frontend ----
+node_modules/
+dist/
+dist-ssr/
+*.local
+coverage/
+.vite/
+.eslintcache
+
+# ---- Python / backend ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+htmlcov/
+.venv/
+venv/
+env/
+ENV/
+
+# ---- Runtime data ----
+backend/data/
+*.sqlite3
+
+# ---- Logs & coverage ----
+*.log
+.coverage
+.coverage.*
+
+# ---- Environment ----
+.env
+.env.*
+!.env.example
+
+# ---- Editor / OS ----
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
