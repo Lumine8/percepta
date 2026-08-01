@@ -1,4 +1,4 @@
-# Percepta
+# <img src="frontend/public/favicon.svg" alt="" width="40" height="40" /> Percepta
 
 > AI that adapts the digital world to how **you** perceive it.
 
