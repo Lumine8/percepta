@@ -11,7 +11,7 @@ from app.api.deps import get_store
 from app.models.profile import PerceptionProfile
 from app.storage.profile_store import ProfileStore
 
-router = APIRouter(tags=["profile"])
+router = APIRouter(prefix="/api", tags=["profile"])
 
 
 @router.get("/profile", response_model=PerceptionProfile, summary="Get the perception profile")

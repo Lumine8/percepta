@@ -14,11 +14,10 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      // Frontend calls /api/... -> backend /... (rewritten by the proxy).
+      // Frontend calls /api/... -> backend /api/... (same contract as Vercel).
       '/api': {
         target: 'http://localhost:8000',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
       },
     },
   },

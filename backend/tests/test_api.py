@@ -32,7 +32,7 @@ def test_health(client) -> None:
 
 
 def test_profile_404_when_empty(client) -> None:
-    response = client.get("/profile")
+    response = client.get("/api/profile")
     assert response.status_code == 404
 
 
@@ -47,13 +47,13 @@ def test_hearing_test_round_trip(client) -> None:
             {"frequency": 4000, "threshold_db": 60},
         ],
     }
-    response = client.post("/hearing/test", json=payload)
+    response = client.post("/api/hearing/test", json=payload)
     assert response.status_code == 200
     body = response.json()
     assert body["classification"] in {"normal", "mild", "moderate", "severe", "profound"}
     assert body["ear"] == "right"
 
-    profile = client.get("/profile")
+    profile = client.get("/api/profile")
     assert profile.status_code == 200
     assert profile.json()["hearing"]["audiogram"][0]["frequency"] == 250
 
@@ -63,14 +63,14 @@ def test_hearing_test_rejects_invalid_threshold(client) -> None:
         "ear": "left",
         "audiogram": [{"frequency": 1000, "threshold_db": 500}],
     }
-    response = client.post("/hearing/test", json=payload)
+    response = client.post("/api/hearing/test", json=payload)
     assert response.status_code == 422
 
 
 def test_hearing_process_returns_peaks_and_audio(client) -> None:
     samples = make_noisy_sine(sr=SR, freq=1000.0, seconds=1.0, noise_db=-15.0)
     response = client.post(
-        "/hearing/process",
+        "/api/hearing/process",
         files={"file": ("tone.wav", _wav_bytes(samples), "audio/wav")},
     )
     assert response.status_code == 200
@@ -93,7 +93,7 @@ def test_hearing_process_accepts_profile_json(client) -> None:
         ],
     }
     response = client.post(
-        "/hearing/process",
+        "/api/hearing/process",
         files={"file": ("tone.wav", _wav_bytes(samples), "audio/wav")},
         data={"profile": __import__("json").dumps(profile)},
     )
@@ -104,7 +104,7 @@ def test_hearing_process_accepts_profile_json(client) -> None:
 def test_hearing_process_rejects_bad_profile(client) -> None:
     samples = make_sine(sr=SR, freq=1000.0, seconds=0.5)
     response = client.post(
-        "/hearing/process",
+        "/api/hearing/process",
         files={"file": ("tone.wav", _wav_bytes(samples), "audio/wav")},
         data={"profile": "{not-json"},
     )
@@ -122,21 +122,21 @@ def test_vision_analyze_round_trip(client) -> None:
             "viewing_distance_cm": 57,
         },
     }
-    response = client.post("/vision/analyze", json=payload)
+    response = client.post("/api/vision/analyze", json=payload)
     assert response.status_code == 200
     body = response.json()
     assert body["contrast_sensitivity"]["threshold_percent"] == 8.0
     assert body["acuity"]["snellen"] == "20/25"
     assert body["blind_spot"]["radius_deg"] > 0
 
-    profile = client.get("/profile")
+    profile = client.get("/api/profile")
     assert profile.status_code == 200
     assert profile.json()["vision"]["acuity"]["snellen"] == "20/25"
 
 
 def test_vision_enhance_returns_png(client) -> None:
     response = client.post(
-        "/vision/enhance",
+        "/api/vision/enhance",
         files={"file": ("img.png", _png_bytes(), "image/png")},
         data={"options": '{"zoom": 1.5, "edge_strength": 1.0}'},
     )
@@ -150,7 +150,7 @@ def test_vision_enhance_returns_png(client) -> None:
 
 def test_vision_enhance_rejects_non_image(client) -> None:
     response = client.post(
-        "/vision/enhance",
+        "/api/vision/enhance",
         files={"file": ("bad.txt", b"hello", "text/plain")},
     )
     assert response.status_code == 400

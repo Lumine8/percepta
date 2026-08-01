@@ -21,7 +21,7 @@ from app.services.hearing.pipeline import HearingPipeline
 from app.storage.profile_store import ProfileStore
 from app.utils import audio_io
 
-router = APIRouter(prefix="/hearing", tags=["hearing"])
+router = APIRouter(prefix="/api/hearing", tags=["hearing"])
 
 
 def _parse_profile(json_str: str | None) -> PerceptionProfile:

@@ -25,7 +25,7 @@ from app.services.vision.pipeline import VisionPipeline
 from app.storage.profile_store import ProfileStore
 from app.utils import image_io
 
-router = APIRouter(prefix="/vision", tags=["vision"])
+router = APIRouter(prefix="/api/vision", tags=["vision"])
 
 
 def _parse_profile(json_str: str | None) -> PerceptionProfile:
