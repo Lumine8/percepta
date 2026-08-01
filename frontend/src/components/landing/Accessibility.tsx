@@ -28,7 +28,7 @@ export function Accessibility() {
         className="mb-12 max-w-2xl"
       >
         <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-          Accessible <span className="text-[#2383e2]">by default</span>
+          Accessible <span className="text-[#34d399]">by default</span>
         </h2>
         <p className="mt-3 text-muted-foreground">
           The product adapts content for your senses — and the product itself is

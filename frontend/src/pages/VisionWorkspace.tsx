@@ -122,7 +122,7 @@ export function VisionWorkspace() {
     <div className="mx-auto max-w-5xl px-4 py-8">
       <header className="mb-6">
         <h1 className="text-3xl font-bold tracking-tight">
-          <span className="text-[#2383e2]">Vision</span> workspace
+          <span className="text-[#34d399]">Vision</span> workspace
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Assess how your eyes perceive the world, then enhance images to match.
@@ -194,7 +194,7 @@ function ProfileSummary({ profile }: { profile: VisionProfile }) {
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
       <GlassCard gradient className="p-6">
         <div className="mb-4 flex items-center gap-3">
-          <ShieldCheck className="h-6 w-6 text-emerald-600" />
+          <ShieldCheck className="h-6 w-6 text-emerald-400" />
           <h2 className="text-lg font-semibold">Your vision profile</h2>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">

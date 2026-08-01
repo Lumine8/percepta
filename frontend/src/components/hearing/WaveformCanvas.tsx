@@ -17,7 +17,7 @@ interface WaveformCanvasProps {
  */
 export function WaveformCanvas({
   peaks,
-  color = '#2383e2',
+  color = '#34d399',
   height = 72,
   progress = 0,
   className,
@@ -58,7 +58,7 @@ export function WaveformCanvas({
         const bottom = mid + (-min / maxAmp) * (mid - 1)
         const x = i * barWidth
         const played = x < playedX
-        ctx.fillStyle = played ? '#8ab3e8' : color
+        ctx.fillStyle = played ? '#6ee7b7' : color
         ctx.fillRect(x + 0.5, top, Math.max(1, barWidth - 1), Math.max(1, bottom - top))
       }
     }

@@ -23,7 +23,7 @@ export function HearingWorkspace() {
     <div className="mx-auto max-w-5xl px-4 py-8">
       <header className="mb-6">
         <h1 className="text-3xl font-bold tracking-tight">
-          <span className="text-[#2383e2]">Hearing</span> workspace
+          <span className="text-[#34d399]">Hearing</span> workspace
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Build a personalized hearing profile, then adapt speech and audio to how

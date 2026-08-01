@@ -36,7 +36,7 @@ export function HowItWorks() {
         className="mb-12 max-w-2xl"
       >
         <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-          How it <span className="text-[#2383e2]">works</span>
+          How it <span className="text-[#34d399]">works</span>
         </h2>
         <p className="mt-3 text-muted-foreground">
           Four steps from raw senses to adapted content.

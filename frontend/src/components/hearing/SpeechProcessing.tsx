@@ -178,7 +178,7 @@ export function SpeechProcessing() {
             )}
             {recorder.state === 'done' && (
               <>
-                <AudioLines className="h-8 w-8 text-emerald-600" />
+                <AudioLines className="h-8 w-8 text-emerald-400" />
                 <span className="text-sm font-medium">Recording ready</span>
                 <Button variant="ghost" size="sm" onClick={recorder.reset}>
                   Re-record
@@ -256,7 +256,7 @@ export function SpeechProcessing() {
                 </p>
                 <WaveformCanvas
                   peaks={result.processed.peaks}
-                  color="#2383e2"
+                  color="#34d399"
                   progress={procProgress}
                   label="Processed waveform"
                 />

@@ -270,7 +270,7 @@ export function ToneTest() {
         )}
 
         {engine.unreliable && (
-          <div className="mt-4 rounded-lg border border-amber-500/40 bg-amber-100 p-3 text-sm text-amber-800">
+          <div className="mt-4 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-200">
             You responded to {engine.falsePositives} of {MAX_FALSE_POSITIVES} allowed silent
             trials. Results may be unreliable — please be honest about what you hear.
           </div>

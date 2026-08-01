@@ -85,7 +85,7 @@ export function AudiogramChart({ audiogram, ear, className }: AudiogramChartProp
       const points = [...audiogram].sort((a, b) => a.frequency - b.frequency)
       if (points.length === 0) return
 
-      ctx.strokeStyle = 'rgba(35,131,226,0.9)'
+      ctx.strokeStyle = 'rgba(52,211,153,0.9)'
       ctx.lineWidth = 2
       ctx.beginPath()
       points.forEach((p, i) => {
@@ -99,7 +99,7 @@ export function AudiogramChart({ audiogram, ear, className }: AudiogramChartProp
       for (const p of points) {
         const x = logX(p.frequency, width, padL)
         const py = y(p.threshold_db)
-        ctx.fillStyle = '#2383e2'
+        ctx.fillStyle = '#34d399'
         ctx.beginPath()
         ctx.arc(x, py, 4, 0, Math.PI * 2)
         ctx.fill()

@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Badge } from '@/components/shared/ui/badge'
 import { Button } from '@/components/shared/ui/button'
 import { KeyboardHelp } from '@/components/shared/KeyboardHelp'
+import { MobileMenu } from '@/components/shared/MobileMenu'
 
 const NAV_ITEMS = [
   { to: '/', label: 'Home', exact: true },
@@ -22,9 +23,7 @@ export function PageShell() {
       <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
           <Link to="/" className="flex items-center gap-2 font-semibold">
-            <span className="grid h-8 w-8 place-items-center rounded-md bg-primary text-sm font-black text-primary-foreground">
-              P
-            </span>
+            <img src="/favicon.svg" alt="" aria-hidden="true" className="h-8 w-8" />
             <span className="text-lg tracking-tight">
               Percepta
               <Badge variant="secondary" className="ml-2 align-middle">
@@ -51,9 +50,34 @@ export function PageShell() {
             ))}
           </nav>
           <div className="flex items-center gap-2">
-            <Link to="/dashboard">
+            <Link to="/dashboard" className="hidden sm:inline-flex">
               <Button size="sm">Open Dashboard</Button>
             </Link>
+            <MobileMenu
+              items={NAV_ITEMS.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.exact}
+                  className={({ isActive }) =>
+                    `rounded-md px-3 py-2 text-sm transition-colors ${
+                      isActive
+                        ? 'bg-secondary text-foreground'
+                        : 'text-muted-foreground hover:bg-secondary/60 hover:text-foreground'
+                    }`
+                  }
+                >
+                  {item.label}
+                </NavLink>
+              ))}
+              footer={
+                <Link to="/dashboard" className="block">
+                  <Button size="sm" className="w-full">
+                    Open Dashboard
+                  </Button>
+                </Link>
+              }
+            />
           </div>
         </div>
       </header>

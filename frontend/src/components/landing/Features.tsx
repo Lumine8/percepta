@@ -55,7 +55,7 @@ export function Features() {
         className="mb-12 max-w-2xl"
       >
         <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-          Built around <span className="text-[#2383e2]">your perception</span>
+          Built around <span className="text-[#34d399]">your perception</span>
         </h2>
         <p className="mt-3 text-muted-foreground">
           Percepta doesn't ship one-size-fits-all filters. It measures how you sense

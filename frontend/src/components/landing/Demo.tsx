@@ -25,7 +25,7 @@ export function Demo() {
         className="mb-12 max-w-2xl"
       >
         <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-          See the <span className="text-[#2383e2]">difference</span>
+          See the <span className="text-[#34d399]">difference</span>
         </h2>
         <p className="mt-3 text-muted-foreground">
           A live preview of how adaptation reshapes an audio signal. Drag the slider.
@@ -44,7 +44,7 @@ export function Demo() {
             label={`Adapted · ${Math.round(strength * 100)}%`}
             seed={0}
             strength={strength}
-            color="rgba(35,131,226,0.9)"
+            color="rgba(52,211,153,0.9)"
           />
         </div>
 

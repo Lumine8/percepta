@@ -24,7 +24,7 @@ export function Dashboard() {
     <div className="mx-auto max-w-5xl px-4 py-10">
       <header className="mb-8 text-center">
         <h1 className="text-4xl font-bold tracking-tight">
-          Your <span className="text-[#2383e2]">perception</span>, adapted
+          Your <span className="text-[#34d399]">perception</span>, adapted
         </h1>
         <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
           Run an assessment and Percepta will adapt audio and images to how you
@@ -32,7 +32,7 @@ export function Dashboard() {
         </p>
         {!loaded && <p className="mt-2 text-sm text-muted-foreground">Loading profile…</p>}
         {offline && (
-          <p className="mt-2 text-sm text-amber-600">
+          <p className="mt-2 text-sm text-amber-300">
             Offline — working from your saved local profile.
           </p>
         )}

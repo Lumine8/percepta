@@ -4,46 +4,46 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
     Roboto, "Helvetica Neue", Arial, sans-serif;
 
-  /* Semantic tokens — Notion-style: white canvas, ink text, quiet grays,
-     near-black primary, blue focus ring. */
-  --color-background: #ffffff;
-  --color-foreground: #37352f;
-  --color-card: #ffffff;
-  --color-card-foreground: #37352f;
-  --color-popover: #ffffff;
-  --color-popover-foreground: #37352f;
-  --color-primary: #37352f;
-  --color-primary-foreground: #ffffff;
-  --color-secondary: #f1f1ef;
-  --color-secondary-foreground: #37352f;
-  --color-muted: #f7f6f3;
-  --color-muted-foreground: #787774;
-  --color-accent: #f1f1ef;
-  --color-accent-foreground: #37352f;
-  --color-destructive: #eb5757;
-  --color-destructive-foreground: #ffffff;
-  --color-border: #e9e9e7;
-  --color-input: #e3e3e0;
-  --color-ring: #2383e2;
+  /* Semantic tokens — dark + nature: deep charcoal-green canvas, soft
+     off-white text, emerald primary and leaf-green accent family. */
+  --color-background: #0b100d;
+  --color-foreground: #e8ece3;
+  --color-card: #111713;
+  --color-card-foreground: #e8ece3;
+  --color-popover: #111713;
+  --color-popover-foreground: #e8ece3;
+  --color-primary: #34d399;
+  --color-primary-foreground: #052e16;
+  --color-secondary: #1a231c;
+  --color-secondary-foreground: #a7f3d0;
+  --color-muted: #141b16;
+  --color-muted-foreground: #9aa79d;
+  --color-accent: #16241b;
+  --color-accent-foreground: #a7f3d0;
+  --color-destructive: #f87171;
+  --color-destructive-foreground: #2a0b0b;
+  --color-border: #24312a;
+  --color-input: #2c3a32;
+  --color-ring: #34d399;
 
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.625rem;
   --radius-xl: 0.75rem;
 
-  /* Decorative icons — quiet Notion gray. */
-  --color-brand-indigo: #787774;
-  --color-brand-violet: #787774;
-  --color-brand-fuchsia: #787774;
-  --color-brand-cyan: #787774;
+  /* Decorative icons — leaf greens. */
+  --color-brand-indigo: #34d399;
+  --color-brand-violet: #4ade80;
+  --color-brand-fuchsia: #2dd4bf;
+  --color-brand-cyan: #6ee7b7;
 
-  --shadow-card: 0 1px 3px rgba(15, 15, 15, 0.04);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.45);
 }
 
 @layer base {
   html {
     scroll-behavior: smooth;
-    color-scheme: light;
+    color-scheme: dark;
   }
 
   body {
@@ -52,7 +52,7 @@
   }
 
   ::selection {
-    background: rgba(35, 131, 226, 0.14);
+    background: rgba(52, 211, 153, 0.28);
   }
 
   :focus-visible {
@@ -66,11 +66,11 @@
     height: 10px;
   }
   ::-webkit-scrollbar-thumb {
-    background: rgba(15, 15, 15, 0.16);
+    background: rgba(52, 211, 153, 0.25);
     border-radius: 8px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(15, 15, 15, 0.3);
+    background: rgba(52, 211, 153, 0.4);
   }
 }
 
@@ -85,12 +85,15 @@
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
   }
   .glass-hover:hover {
-    border-color: rgba(55, 53, 47, 0.35);
+    border-color: rgba(52, 211, 153, 0.45);
   }
 
-  /* Plain emphasis — no color, just ink */
+  /* Brand emphasis — emerald → leaf gradient on text. */
   .text-gradient {
-    color: var(--color-foreground);
+    background-image: linear-gradient(120deg, #34d399 0%, #4ade80 55%, #a7f3d0 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
 
   .border-gradient {

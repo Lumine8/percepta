@@ -14,9 +14,7 @@ export function Footer() {
         <div className="grid gap-8 md:grid-cols-3">
           <div>
             <Link to="/" className="flex items-center gap-2 font-semibold">
-              <span className="grid h-8 w-8 place-items-center rounded-md bg-primary text-sm font-black text-primary-foreground">
-                P
-              </span>
+              <img src="/favicon.svg" alt="" aria-hidden="true" className="h-8 w-8" />
               Percepta
             </Link>
             <p className="mt-3 max-w-xs text-sm text-muted-foreground">

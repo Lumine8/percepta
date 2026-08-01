@@ -43,7 +43,7 @@ export function Research() {
           <FlaskConical className="h-7 w-7" />
         </div>
         <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-          Grounded in <span className="text-[#2383e2]">research</span>
+          Grounded in <span className="text-[#34d399]">research</span>
         </h2>
         <p className="mt-3 text-muted-foreground">
           Every processing stage maps to established signal-processing and vision
