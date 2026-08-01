@@ -10,7 +10,8 @@
     "test": "npm run test:backend && npm run test:frontend",
     "test:backend": "cd backend && .\\.venv\\Scripts\\python.exe -m pytest -q",
     "test:frontend": "npm --prefix frontend run test",
-    "typecheck": "npm --prefix frontend run typecheck"
+    "typecheck": "npm --prefix frontend run typecheck",
+    "ping": "node scripts/ping-backend.mjs"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

@@ -55,7 +55,21 @@ Full setup (venv, env vars, AI processors) is in [docs/SETUP.md](docs/SETUP.md).
 | `npm run dev`      | Run backend + frontend together               |
 | `npm run test`     | Backend (`pytest`) + frontend (`vitest`)      |
 | `npm run typecheck`| Frontend `tsc -b --noEmit`                    |
+| `npm run ping`     | Keep a deployed backend awake (see below)     |
 | `npm --prefix frontend run build` | Production frontend build       |
+
+## Keeping the backend awake
+
+Free hosting tiers (Render, Railway, Fly.io, …) sleep idle instances after ~15
+minutes. To keep the deployed backend warm, run the ping script from anywhere:
+
+```powershell
+PERCEPTA_BACKEND_URL=https://your-app.onrender.com npm run ping
+```
+
+- Pings `/health` every 10 minutes by default (override with `PING_INTERVAL_MIN`).
+- Defaults to `http://localhost:8000` if no URL is set.
+- Failures are logged and retried automatically.
 
 ## Conventions
 
